@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Indoor Navigation Mockup</title>
+    <!-- Stabile A-Frame Version laden -->
+    <script src="https://aframe.io"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #000;
+        }
+
+        /* Kamera-Hintergrund füllt den gesamten Bildschirm */
+        #camera-stream {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        /* 3D-Ebene über der Kamera */
+        a-scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        /* Cyberpunk UI Overlay */
+        .ui-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(8, 8, 12, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ui-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.05);
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 1.8rem;
+            margin-bottom: 2.5rem;
+            text-shadow: 0 0 10px #00e5ff, 0 0 20px rgba(0, 229, 255, 0.5);
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            width: 75%;
+            max-width: 280px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.25), rgba(0, 78, 255, 0.25));
+            color: #fff;
+            border: 2px solid #00e5ff;
+            padding: 1.2rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-btn:active {
+            transform: scale(0.95);
+            background: rgba(0, 229, 255, 0.6);
+            box-shadow: 0 0 25px #00e5ff;
+        }
+
+        /* Menü-Reset-Button (oben rechts) */
+        #reset-btn {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            z-index: 4;
+            background: rgba(10, 10, 15, 0.6);
+            border: 1px solid #00e5ff;
+            color: #00e5ff;
+            padding: 10px 16px;
+            border-radius: 30px;
+            font-weight: bold;
+            display: none;
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Live-Kamerabild -->
+    <video id="camera-stream" autoplay playsinline muted></video>
+
+    <!-- 2. UI Overlay -->
+    <div class="ui-container" id="menu-overlay">
+        <h1>WO WILLST DU HIN?</h1>
+        <div class="btn-group">
+            <button class="nav-btn" onclick="startNavigation('kueche')">Küche</button>
+            <button class="nav-btn" onclick="startNavigation('bad')">Bad</button>
+        </div>
+    </div>
+
+    <button id="reset-btn" onclick="resetNavigation()">🔄 Menü</button>
+
+    <!-- 3. A-Frame 3D Szene -->
+    <a-scene embedded vr-mode-ui="enabled: false" renderer="alpha: true; antialias: true;">
+        
+        
+        <!-- Die Kamera nutzt die Bewegungssensoren (Gyroskop) des Handys zum Umschauen -->
+        
+
+        <!-- PFAD ZUR KÜCHE (3m vor -> 7m links -> 3m links -> 3m links) -->
+        
+            <!-- 1. Segment: 3 Meter geradeaus -->
+            <a-box position="0 -1.4 -1.5" width="0.25" height="0.03" depth="3" material="color: #00e5ff; emissive: #00e5ff; emissiveIntensity: 2; opacity: 0.9;"></a-box>
+            
+            <!-- 2. Segment: 90° Links-Abknicken für 7 Meter -->
+            <a-box position="-3.5 -1.4 -3" width="7" height="0.03" depth="0.25" material="color: #00e5ff; emissive: #00e5ff; emissiveIntensity: 2; opacity: 0.9;"></a-box>
+            
+            <!-- 3. Segment: 90° Links-Abknicken für 3 Meter -->
+            <a-box position="-7 -1.4 -1.5" width="0.25" height="0.03" depth="3" material="color: #00e5ff; emissive: #00e5ff; emissiveIntensity: 2; opacity: 0.9;"></a-box>
+            
+            <!-- 4. Segment: Letztes Mal 90° links für 3 Meter zum Ziel -->
+            <a-box position="-5.5 -1.4 0" width="3" height="0.03" depth="0.25" material="color: #00e5ff; emissive: #00e5ff; emissiveIntensity: 2; opacity: 0.9;"></a-box>
+
+            <!-- ZIEL-FAHNE (Am Ende des Pfades) -->
+            
+                <!-- Mast -->
+                <a-cylinder position="0 1 0" radius="0.03" height="2" color="#ffffff"></a-cylinder>
+                <!-- Neon-Flagge (rotiert) -->
+                <a-triangle position="0.3 1.7 0" vertex-a="0 0.3 0" vertex-b="0 -0.3 0" vertex-c="0.6 0 0" 
+                            material="color: #ff0055; emissive: #ff0055; emissiveIntensity: 1.5; side: double"
+                            animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear">
+                </a-triangle>
+                <!-- Pulsierender Ring am Boden -->
+                <a-ring radius-inner="0.3" radius-outer="0.45" rotation="-90 0 0" position="0 0.05 0"
+                        material="color: #ff0055; emissive: #ff0055; emissiveIntensity: 2; side: double"
+                        animation="property: scale; to: 1.3 1.3 1.3; loop: true; dur: 1200; dir: alternate; easing: easeInOutQuad">
+                </a-ring>
+            
+        
+
+        <!-- PFAD ZUM BAD -->
+        
+            <a-box position="0 -1.4 -1" width="0.25" height="0.03" depth="2" material="color: #00e5ff; emissive: #00e5ff; emissiveIntensity: 2;"></a-box>
+            <a-box position="1 -1.4 -2" width="2" height="0.03" depth="0.25" material="color: #00e5ff; emissive: #00e5ff; emissiveIntensity: 2;"></a-box>
+        
+
+    </a-scene>
+
+    <!-- 4. Kamera- und UI-Logik -->
+    <script>
+        const video = document.getElementById('camera-stream');
+
+        // Kamera aktivieren (Erfordert zwingend HTTPS auf Mobilgeräten!)
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment" }, 
+                audio: false 
+            })
+            .then(function(stream) {
+                video.srcObject = stream;
+            })
+            .catch(function(err) {
+                console.error("Kamerazugriff fehlgeschlagen: ", err);
+            });
+        }
+
+        // Klick-Aktion für die Buttons
+        function startNavigation(ziel) {
+            document.getElementById('menu-overlay').classList.add('hidden');
+            document.getElementById('reset-btn').style.display = 'block';
+
+            document.getElementById('path-kueche').setAttribute('visible', 'false');
+            document.getElementById('path-bad').setAttribute('visible', 'false');
+
+            if(ziel === 'kueche') {
+                document.getElementById('path-kueche').setAttribute('visible', 'true');
+            } else if(ziel === 'bad') {
+                document.getElementById('path-bad').setAttribute('visible', 'true');
+            }
+        }
+
+        // Zurück zum Menü
+        function resetNavigation() {
+            document.getElementById('menu-overlay').classList.remove('hidden');
+            document.getElementById('reset-btn').style.display = 'none';
+            document.getElementById('path-kueche').setAttribute('visible', 'false');
+            document.getElementById('path-bad').setAttribute('visible', 'false');
+        }
+    </script>
+</body>
+</html>
